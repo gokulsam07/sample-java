@@ -33,12 +33,11 @@ jobs:
       # Step: Run Maven tests with TestNG.
       - name: Run Maven Tests
         run: |
-        if
-        [ -n "${ { github.event.inputs.test_class } }" ]; then
-        mvn clean test -Dtest=${{ github.event.inputs.test_class }}
-        else
-          mvn clean test
-      fi
+          if [ -n "${ { github.event.inputs.test_class } }" ]; then
+            mvn clean test -Dtest=${{ github.event.inputs.test_class }}
+          else
+            mvn clean test
+          fi
         continue-on-error: true # Continue to capture reports if tests fail.
       # Step: Store test artifacts on GitHub.
       - name: Upload Test Artifacts
