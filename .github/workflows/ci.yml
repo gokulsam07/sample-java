@@ -1,0 +1,38 @@
+# Name of the workflow, shown in the GitHub Actions tab.
+name: Run TestNG Tests
+
+# Defines when the workflow runs.
+on:
+  workflow_dispatch: # Trigger manually from the GitHub UI.
+
+# Optional: Customizes the display name of each run.
+run-name: "Manual TestNG Run - ${{ github.run_id }}"
+
+# Defines the job to execute.
+jobs:
+  test-job:
+    name: Run TestNG Tests
+    runs-on: ubuntu-latest # Use GitHub-hosted runner.
+    steps:
+      # Step: Checkout the repository code.
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      # Step: Set up JDK 17 for Maven.
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin' # Eclipse Temurin distribution.
+          cache: 'maven' # Cache Maven dependencies for faster builds.
+      # Step: Run Maven tests with TestNG.
+      - name: Run Maven Tests
+        run: mvn clean test
+        continue-on-error: true # Continue to capture reports if tests fail.
+      # Step: Store test artifacts on GitHub.
+      - name: Upload Test Artifacts
+        if: ${{ always() }} # Run even if tests fail.
+        uses: actions/upload-artifact@v4
+        with:
+          name: testng-reports
+          path: target/surefire-reports/
+          retention-days: 7 # Keep artifacts for 7 days.
