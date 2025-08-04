@@ -3,16 +3,16 @@ name: Run TestNG Tests
 
 # Defines when the workflow runs.
 on:
-  workflow_dispatch: # Trigger manually from the GitHub UI.
-  inputs:
-    test_class:
-      type: string
-      description: 'TestNG test class to run (e.g., org.example.SampleTest)'
-      required: false
-      default: ''
+  workflow_dispatch:
+    inputs:
+      test_class:
+        type: string
+        description: 'TestNG test class to run (e.g., org.example.SampleTest)'
+        required: false
+        default: ''
 
-# Optional: Customizes the display name of each run.
-run-name: "Manual TestNG Run - ${{ github.run_id }}"
+# Customizes the display name of each run.
+run-name: "Manual TestNG Run - ${{ github.event.inputs.test_class || 'All Tests' }}"
 
 # Defines the job to execute.
 jobs:
@@ -28,22 +28,29 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin' # Eclipse Temurin distribution.
-          cache: 'maven' # Cache Maven dependencies for faster builds.
+          distribution: 'temurin'
+          cache: 'maven'
+      # Step: Debug project structure.
+      - name: List Project Files
+        run: |
+          echo "Listing files in src/test/java:"
+          ls -l src/test/java || echo "No test files found"
+          echo "Listing files in src/main/java:"
+          ls -l src/main/java || echo "No main files found"
       # Step: Run Maven tests with TestNG.
       - name: Run Maven Tests
         run: |
-          if [ -n "${ { github.event.inputs.test_class } }" ]; then
+          if [ -n "${{ github.event.inputs.test_class }}" ]; then
             mvn clean test -Dtest=${{ github.event.inputs.test_class }}
           else
             mvn clean test
           fi
-        continue-on-error: true # Continue to capture reports if tests fail.
+        continue-on-error: true
       # Step: Store test artifacts on GitHub.
       - name: Upload Test Artifacts
-        if: ${{ always() }} # Run even if tests fail.
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: testng-reports
           path: target/surefire-reports/
-          retention-days: 7 # Keep artifacts for 7 days.
+          retention-days: 7
